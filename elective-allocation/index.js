@@ -16,7 +16,7 @@ const port = process.env.PORT || 3000
 connectDB()
 
 app.use(cors({
-    origin: process.env.FRONTEND_URL ||'http://localhost:5173',
+    origin: process.env.FRONTEND_URL ||'https://elective-allocation.vercel.app',
     credentials:true
 }))
 app.use(bodyParser.json())
