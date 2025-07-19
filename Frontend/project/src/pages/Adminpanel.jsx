@@ -69,20 +69,29 @@ const AdminPanel = () => {
   };
 
   const maxPreferences = async () => {
-    if (!maxPref) return setUploadMessage("❌ Please enter max preferences count");
+  if (!maxPref || isNaN(maxPref) || Number(maxPref) <= 0) {
+    return setUploadMessage("❌ Please enter a valid positive number for max preferences");
+  }
 
-    try {
-      await axios.post(`${import.meta.env.VITE_API_BASE}/api/max-pref`, {
-        maxPreferences: maxPref,
-      }, {
+  try {
+    await axios.post(
+      `${import.meta.env.VITE_API_BASE}/api/max-pref`,
+      {
+        maxPreferences: Number(maxPref),
+      },
+      {
         withCredentials: true,
-      });
-      setUploadMessage("✅ Max preferences updated");
-      setMaxPref('');
-    } catch {
-      setUploadMessage("❌ Setting max preferences failed");
-    }
-  };
+      }
+    );
+
+    setUploadMessage("✅ Max preferences updated");
+    setMaxPref('');
+  } catch (error) {
+    console.error("Error updating max preferences:", error);
+    setUploadMessage("❌ Setting max preferences failed");
+  }
+};
+
 
   const getallstudents = async () => {
     try {
