@@ -37,7 +37,7 @@ router.post('/max-pref', adminAuth, maxPreference)
 router.get('/result/:rollNo',adminAuth, getStudentByRollNo)
 router.post('/admin_login', adminlogin)
 router.post('/admin_logout', logoutAdmin)
-router.delete('/delete_student', adminAuth, deleteStudent)
+router.delete('/delete_student/:rollNo', adminAuth, deleteStudent)
 router.get('/getallstudents', adminAuth, getAllstudents)
 router.get('/getAllsubjects', adminAuth, getAllsubjects)
 
