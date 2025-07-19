@@ -72,7 +72,7 @@ const AdminPanel = () => {
     if (!maxPref) return setUploadMessage("❌ Please enter max preferences count");
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_BASE}/api/max_pref`, {
+      await axios.post(`${import.meta.env.VITE_API_BASE}/api/max-pref`, {
         maxPreferences: maxPref,
       }, {
         withCredentials: true,
