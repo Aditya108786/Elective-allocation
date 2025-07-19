@@ -339,10 +339,19 @@ const getAllstudents = async (req, res) => {
     const students = await Student.find().sort({ cgpa: -1 }); // Sort by CGPA descending
     return res.status(200).json(students);
   } catch (error) {
-    console.error('Error fetching students:', error.message);
+   
     return res.status(500).json({ message: 'Server error while fetching students' });
   }
 };
+
+const getAllsubjects = async(req,res)=>{
+   try {
+      const subjects = await Subject.find()
+      return res.status(200).json(subjects)
+   } catch (error) {
+      return res.status(500).json({message:'server error while fetching students'})
+   }
+}
 
 module.exports = {
   uploadCGPAFromCSV,
