@@ -306,29 +306,43 @@ const Addsubjects = async(req, res) =>{
      return res.status(200).json({message:"subjects uploaded"})
 }
 
-const maxPreference = async(req,res)=>{
-    const{maxPreferences} = req.body
+const maxPreference = async (req, res) => {
+  try {
+    const { maxPreferences } = req.body;
 
-    if(!maxPreferences){
-      return res.status(404).json({message:"required"})
+    if (!maxPreferences || typeof maxPreferences !== 'number' || maxPreferences <= 0) {
+      return res.status(400).json({ message: "maxPreferences must be a positive number" });
     }
 
-    const maxpre = new maxpref({
-      maxPreferences
-    })
-   await maxpre.save()
-   return res.status(200).json({message:"fixed"})
-}
+    // Check if a document already exists
+    const existing = await maxpref.findOne();
 
-const getAllstudents = async(req,res)=>{
-    const students = await Student.find().sort({cgpa})
-   return res.status(200).json(students)
-}
+    if (existing) {
+      existing.maxPreferences = maxPreferences;
+      await existing.save();
+    } else {
+      const newPref = new maxpref({ maxPreferences });
+      await newPref.save();
+    }
 
-const getAllsubjects = async(req,res)=>{
-  const allsubjects = await Subject.find()
-  return res.status(200).json(allsubjects)
-}
+    return res.status(200).json({ message: "Max preferences set successfully", maxPreferences });
+  } catch (error) {
+    
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
+const getAllstudents = async (req, res) => {
+  try {
+    const students = await Student.find().sort({ cgpa: -1 }); // Sort by CGPA descending
+    return res.status(200).json(students);
+  } catch (error) {
+    console.error('Error fetching students:', error.message);
+    return res.status(500).json({ message: 'Server error while fetching students' });
+  }
+};
 
 module.exports = {
   uploadCGPAFromCSV,
