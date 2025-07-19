@@ -353,6 +353,20 @@ const getAllsubjects = async(req,res)=>{
    }
 }
 
+// Controller to fetch current maxPreferences
+const getMaxPreference = async (req, res) => {
+  try {
+    const setting = await maxpref.findOne();
+    if (!setting) {
+      return res.status(404).json({ message: "No max preferences found" });
+    }
+    return res.status(200).json({ maxPreferences: setting.maxPreferences });
+  } catch (error) {
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+
 module.exports = {
   uploadCGPAFromCSV,
   submitPreferences,
@@ -367,5 +381,6 @@ module.exports = {
   logoutAdmin,
 maxPreference, 
 Addsubjects,
-getAllsubjects
+getAllsubjects,
+getMaxPreference
 };

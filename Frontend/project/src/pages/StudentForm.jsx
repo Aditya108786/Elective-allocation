@@ -15,7 +15,7 @@ const StudentForm = () => {
   useEffect(() => {
     const fetchMaxPref = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_BASE}/api/max_pref`);
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE}/api/get-max-pref`);
         setMaxPreferences(res.data.maxPreferences);
         setPreferences(new Array(res.data.maxPreferences).fill(''));
       } catch (error) {
@@ -30,7 +30,7 @@ const StudentForm = () => {
     const fetchSubjects = async () => {
       try {
         const res = await axios.get(`${import.meta.env.VITE_API_BASE}/api/getAllsubjects`);
-        setSubjects(res.data.allsubjects);
+        setSubjects(res.data);
       } catch (error) {
         setMessage('❌ Failed to fetch subjects');
       }
