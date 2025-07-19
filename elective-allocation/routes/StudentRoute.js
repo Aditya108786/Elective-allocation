@@ -40,8 +40,8 @@ router.post('/admin_login', adminlogin)
 router.post('/admin_logout', logoutAdmin)
 router.delete('/delete_student/:rollNo', adminAuth, deleteStudent)
 router.get('/getallstudents', adminAuth, getAllstudents)
-router.get('/getAllsubjects', adminAuth, getAllsubjects)
-router.get('/get-max-pref', adminAuth, getMaxPreference)
+router.get('/getAllsubjects',  getAllsubjects)
+router.get('/get-max-pref', getMaxPreference)
 
 
 module.exports = router
