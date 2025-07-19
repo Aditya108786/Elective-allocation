@@ -98,7 +98,7 @@ const AdminPanel = () => {
       const res = await axios.get(`${import.meta.env.VITE_API_BASE}/api/getallstudents`, {
         withCredentials: true,
       });
-      setStudents(res.data.students || []);
+      setStudents(res.data || []);
     } catch {
       setUploadMessage("❌ Failed to fetch students");
     }
