@@ -13,30 +13,34 @@ const StudentForm = () => {
 
   // Fetch max preferences
   useEffect(() => {
-    const fetchMaxPref = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_API_BASE}/api/get-max-pref`);
-        setMaxPreferences(res.data.maxPreferences);
-        setPreferences(new Array(res.data.maxPreferences).fill(''));
-      } catch (error) {
-        setMessage('❌ Failed to fetch max preferences');
-      }
-    };
-    fetchMaxPref();
-  }, []);
+  const fetchData = async () => {
+    try {
+      // Fetch both in parallel
+      const [maxPrefRes, subjectsRes] = await Promise.all([
+        axios.get(`${import.meta.env.VITE_API_BASE}/api/get-max-pref`),
+        axios.get(`${import.meta.env.VITE_API_BASE}/api/getAllsubjects`),
+      ]);
+
+      const maxPrefFromDB = maxPrefRes.data.maxPreferences;
+      const subjectList = subjectsRes.data;
+
+      setSubjects(subjectList);
+
+      const allowedPreferences = Math.min(maxPrefFromDB, subjectList.length);
+      setMaxPreferences(allowedPreferences);
+      setPreferences(new Array(allowedPreferences).fill(''));
+
+    } catch (error) {
+      setMessage('❌ Failed to fetch subjects or max preferences');
+    }
+  };
+
+  fetchData();
+}, []);
+
 
   // Fetch all subjects
-  useEffect(() => {
-    const fetchSubjects = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_API_BASE}/api/getAllsubjects`);
-        setSubjects(res.data);
-      } catch (error) {
-        setMessage('❌ Failed to fetch subjects');
-      }
-    };
-    fetchSubjects();
-  }, []);
+  
 
   // Set roll number from session
   useEffect(() => {

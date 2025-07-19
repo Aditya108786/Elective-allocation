@@ -221,15 +221,15 @@ const AdminPanel = () => {
             <tbody>
               {allocations.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="text-center p-4 text-white dark:text-gray-400">No allocation results yet.</td>
+                  <td colSpan="4" className="text-center p-4 text-white dark:text-white">No allocation results yet.</td>
                 </tr>
               ) : (
                 allocations.map((s) => (
                   <tr key={s.rollNo} className="border-t">
-                    <td className="px-4 py-2">{s.rollNo}</td>
-                    <td className="px-4 py-2">{s.name}</td>
-                    <td className="px-4 py-2">{s.cgpa}</td>
-                    <td className="px-4 py-2">{s.allocated || 'Not Allocated'}</td>
+                    <td className="px-4 py-2 text-white">{s.rollNo}</td>
+                    <td className="px-4 py-2 text-white">{s.name}</td>
+                    <td className="px-4 py-2 text-white">{s.cgpa}</td>
+                    <td className="px-4 py-2 text-white">{s.allocated || 'Not Allocated'}</td>
                   </tr>
                 ))
               )}
@@ -258,9 +258,9 @@ const AdminPanel = () => {
               ) : (
                 students.map((s) => (
                   <tr key={s.rollNo} className="border-t">
-                    <td className="px-4 py-2">{s.rollNo}</td>
-                    <td className="px-4 py-2">{s.name}</td>
-                    <td className="px-4 py-2">{s.cgpa}</td>
+                    <td className="px-4 py-2 text-white">{s.rollNo}</td>
+                    <td className="px-4 py-2 text-white">{s.name}</td>
+                    <td className="px-4 py-2 text-white">{s.cgpa}</td>
                     <td className="px-4 py-2">
                       <button
                         onClick={() => deletestudent(s.rollNo)}

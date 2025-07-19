@@ -49,7 +49,7 @@ const submitPreferences = async (req, res) => {
   try {
     const { rollNo, preferences } = req.body;
 
-    if (!rollNo || !preferences || preferences.length !== 4) {
+    if (!rollNo || !preferences) {
       return res.status(400).json({ error: 'Invalid roll number or preferences' });
     }
 
@@ -57,8 +57,8 @@ const submitPreferences = async (req, res) => {
 
     const count = maxpreference.maxPreferences
 
-    if(count !== preferences.length){
-      return res.status(400).json({error:`Exactly ${count} preferences are allowed`})
+    if(count < preferences.length){
+      return res.status(400).json({error:` ${count} preferences are allowed`})
     }
 
     const allsubjects = await Subject.find().select('name -_id')
