@@ -221,7 +221,7 @@ const AdminPanel = () => {
             <tbody>
               {allocations.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="text-center p-4 text-gray-500 dark:text-gray-400">No allocation results yet.</td>
+                  <td colSpan="4" className="text-center p-4 text-white dark:text-gray-400">No allocation results yet.</td>
                 </tr>
               ) : (
                 allocations.map((s) => (
@@ -253,7 +253,7 @@ const AdminPanel = () => {
             <tbody>
               {students.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="text-center p-4 text-gray-500">No students found</td>
+                  <td colSpan="4" className="text-center p-4 text-white">No students found</td>
                 </tr>
               ) : (
                 students.map((s) => (
