@@ -13,7 +13,12 @@ const{
     getStudentByRollNo,
     login,
     adminlogin,
-    logoutAdmin
+    logoutAdmin,
+    maxPreference,
+    Addsubjects,
+    deleteStudent,
+    getAllstudents,
+    getAllsubjects
 } = require('../controllers/allocationController')
 const adminAuth = require('../middlewares/adminauth')
 const multer = require('multer');
@@ -27,9 +32,14 @@ router.post('/upload-cgpa',adminAuth, upload.single('file'), uploadCGPAFromCSV);
 router.post('/preferences', submitPreferences)
 router.get('/allocate',adminAuth, allocateSubjects)
 router.post('/reset',adminAuth, resetSystem)
-
+router.post('/addsubjects', adminAuth, Addsubjects)
+router.post('/max-pref', adminAuth, maxPreference)
 router.get('/result/:rollNo',adminAuth, getStudentByRollNo)
 router.post('/admin_login', adminlogin)
 router.post('/admin_logout', logoutAdmin)
+router.delete('/delete_student', adminAuth, deleteStudent)
+router.get('/getallstudents', adminAuth, getAllstudents)
+router.get('/getAllsubjects', adminAuth, getAllsubjects)
+
 
 module.exports = router

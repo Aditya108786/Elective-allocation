@@ -2,11 +2,13 @@
 const csv = require('csv-parser');
 const { Readable } = require('stream');
 const Student = require('../models/Student');
+const subjects = require('../models/Subject')
+const maxpref = require('../models/settingschema')
 const jwt = require('jsonwebtoken');
+const Subject = require('../models/Subject');
+const { error } = require('console');
 
-const SEAT_LIMIT = 20;
-const SUBJECTS = ['S1', 'S2', 'S3', 'S4'];
-let seatMap = {};
+
 
 const uploadCGPAFromCSV = async (req, res) => {
   try {
@@ -50,6 +52,27 @@ const submitPreferences = async (req, res) => {
     if (!rollNo || !preferences || preferences.length !== 4) {
       return res.status(400).json({ error: 'Invalid roll number or preferences' });
     }
+
+    const maxpreference = await maxpref.findOne()
+
+    const count = maxpreference.maxPreferences
+
+    if(count !== preferences.length){
+      return res.status(400).json({error:`Exactly ${count} preferences are allowed`})
+    }
+
+    const allsubjects = await Subject.find().select('name -_id')
+    const subname = allsubjects.map((sub)=>{
+      sub.name
+    })
+    const invalidpreferences = preferences.filter((p)=>{
+               !subname.includes(p)
+    })
+
+    if(invalidpreferences.length > 0){
+     return res.status(400).json({ error: `Invalid subjects in preferences: ${invalidpreferences.join(', ')}` });
+    }
+     
 
     const student = await Student.findOne({ rollNo });
     if (!student) {
@@ -103,19 +126,37 @@ const submitPreferencesBulk = async (req, res) => {
 const allocateSubjects = async (req, res) => {
   try {
     const seatMap = {};
-    SUBJECTS.forEach(subject => seatMap[subject] = SEAT_LIMIT);
+    const subjects = await Subject.find({})
+    const students = await Student.find({allocated:null}).sort({ cgpa: -1, createdAt: 1 });
 
-    const students = await Student.find().sort({ cgpa: -1, createdAt: 1 });
+    subjects.forEach((subject)=>{
+       seatMap[subject.name] = {
+         _id:subject._id,
+         seatlimit:subject.seatlimit,
+         seatsfilled:subject.seatsFilled || 0
+       }
+    })
+
+
 
     for (let student of students) {
       for (let pref of student.preferences) {
-        if (seatMap[pref] > 0) {
-          student.allocated = pref;
-          seatMap[pref]--;
-          await student.save();
-          break;
+        let subject = seatMap[pref]
+
+        if(subject && subject.seatlimit > subject.seatsFilled){
+          student.allocated = pref
+          subject.seatsFilled += 1
+
+          await student.save()
+          break
         }
       }
+    }
+
+    for(const subjname in seatMap){
+         await Subject.findByIdAndUpdate(seatMap[subjname]._id , {
+            seatsFilled:seatMap[subjname].seatsFilled
+         })
     }
 
     const result = students.map(s => ({
@@ -144,6 +185,18 @@ const resetSystem = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+const deleteStudent = async(req,res)=>{
+    const {rollNo} = req.params
+
+    if(!rollNo){
+      return res.status(400).json({ error: 'Roll Number is required' });
+    }
+
+    const student = await Student.findOneAndDelete({rollNo})
+    student.save()
+    return res.status(200).json({message:"deleted"})
+}
 
 const getStudentByRollNo = async (req, res) => {
   try {
@@ -237,15 +290,59 @@ const logoutAdmin = (req, res) => {
   res.json({ message: "Logged out successfully" });
 };
 
+const Addsubjects = async(req, res) =>{
+     const{name, seatlimit} = req.body
+
+     if(!name || !seatlimit){
+      return res.status(404).json({error:"name and limit required"})
+       
+     }
+
+     const subjectdetail = new subjects({
+        name,
+        seatlimit
+     })
+     await subjectdetail.save()
+     return res.status(200).json({message:"subjects uploaded"})
+}
+
+const maxPreference = async(req,res)=>{
+    const{maxPreferences} = req.body
+
+    if(!maxPreferences){
+      return res.status(404).json({message:"required"})
+    }
+
+    const maxpre = new maxpref({
+      maxPreferences
+    })
+   await maxpre.save()
+   return res.status(200).json({message:"fixed"})
+}
+
+const getAllstudents = async(req,res)=>{
+    const students = await Student.find().sort({cgpa})
+   return res.status(200).json(students)
+}
+
+const getAllsubjects = async(req,res)=>{
+  const allsubjects = await Subject.find()
+  return res.status(200).json(allsubjects)
+}
+
 module.exports = {
   uploadCGPAFromCSV,
   submitPreferences,
   allocateSubjects,
   resetSystem,
-  
+  getAllstudents,
   submitPreferencesBulk,
   getStudentByRollNo,
+  deleteStudent,
   login,
   adminlogin,
-  logoutAdmin
+  logoutAdmin,
+maxPreference, 
+Addsubjects,
+getAllsubjects
 };

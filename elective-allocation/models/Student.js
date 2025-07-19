@@ -21,13 +21,8 @@ const studentSchema = new mongoose.Schema({
   },
   preferences: {
     type: [String],
-    default: [],
-    validate: {
-      validator: function (v) {
-        return v.length <= 4;
-      },
-      message: 'Only up to 4 preferences are allowed.'
-    }
+    default: []
+    
   },
   allocated: {
     type: String,
