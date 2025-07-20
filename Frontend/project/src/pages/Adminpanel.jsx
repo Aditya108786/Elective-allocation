@@ -139,12 +139,12 @@ const AdminPanel = () => {
             onChange={(e) => setFile(e.target.files[0])}
             className="block text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
           />
-          <button onClick={uploadCSV} disabled={loading} className="btn bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
+          <button onClick={uploadCSV} disabled={loading} className="btn bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 rounded-md">
             <Upload size={18} /> Upload CGPA CSV
           </button>
-          <button onClick={allocate} className="btn bg-blue-600 hover:bg-blue-700 text-white">⚙ Run Allocation</button>
-          <button onClick={getallstudents} className="btn bg-yellow-500 hover:bg-yellow-600 text-white">👥 Show Students</button>
-          <button onClick={startvoice} className="btn bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2">
+          <button onClick={allocate} className="btn bg-blue-600 hover:bg-blue-700 text-white rounded-md">⚙ Run Allocation</button>
+          <button onClick={getallstudents} className="btn bg-yellow-500 hover:bg-yellow-600 text-white rounded-md">👥 Show Students</button>
+          <button onClick={startvoice} className="btn bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 rounded-md">
             <Mic size={18} /> Voice Input
           </button>
         </div>
@@ -182,7 +182,7 @@ const AdminPanel = () => {
                   placeholder="Seat limit"
                   className="input"
                 />
-                <button onClick={addsubjects} className="btn bg-purple-600 hover:bg-purple-700 text-white mt-2 w-full">
+                <button onClick={addsubjects} className="btn bg-purple-600 hover:bg-purple-700 text-white mt-2 w-full rounded-md">
                   ➕ Add
                 </button>
               </div>
@@ -195,12 +195,13 @@ const AdminPanel = () => {
                   onChange={(e) => setMaxPref(e.target.value)}
                   className="input"
                 >
-                  <option value="">Select max preferences</option>
-                  {subjects.map((_, i) => (
-                    <option key={i + 1} value={i + 1}>
-                      {i + 1}
-                    </option>
-                  ))}
+                 <option value="">Select max preferences</option>
+{Array.from({ length: 10 }, (_, i) => (
+  <option key={i + 1} value={i + 1}>
+    {i + 1}
+  </option>
+))}
+
                 </select>
                 <button onClick={maxPreferences} className="btn bg-orange-600 hover:bg-orange-700 text-white mt-2 w-full">
                   ✅ Set
