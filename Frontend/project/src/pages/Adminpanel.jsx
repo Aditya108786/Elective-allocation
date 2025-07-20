@@ -11,6 +11,7 @@ const AdminPanel = () => {
   const [allocations, setAllocations] = useState([]);
   const [uploadMessage, setUploadMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const[open, setopen] = useState(false)
 
   const [name, setName] = useState('');
   const [seatlimit, setSeatlimit] = useState('');
@@ -168,8 +169,10 @@ const AdminPanel = () => {
         )}
 
         <div className="mb-10">
-          <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">⚙ Configuration</h3>
-          <div className="grid md:grid-cols-2 gap-4">
+          <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white"><button className='bg-blue-600 text-white px-4 py-2 rounded' onClick={()=>{setopen(!open)}}>Configuration</button></h3>
+
+          {open && (
+             <div className="grid md:grid-cols-2 gap-4">
             <div>
               <h4 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">➕ Add Subject</h4>
               <input
@@ -203,6 +206,8 @@ const AdminPanel = () => {
               </button>
             </div>
           </div>
+          )}
+          
         </div>
 
         <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
