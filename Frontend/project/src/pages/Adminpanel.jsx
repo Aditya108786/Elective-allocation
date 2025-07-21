@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { startvoiceRecognition } from '../Audioinput';
 import { ChevronDown, ChevronUp, Upload, Trash, Settings, Mic } from 'lucide-react';
 import SectionTable from './SectionnTable';
+import SubjectTable from './SubjectTable';
+
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -155,6 +157,17 @@ const AdminPanel = () => {
   useEffect(() => {
     fetchSubjects();
   }, []);
+
+  const deleteSubject = async (id) => {
+  try {
+    await axios.delete(`${import.meta.env.VITE_API_BASE}/api/delete_subject/${id}`, { withCredentials: true });
+    setSubjects((prev) => prev.filter((s) => s._id !== id));
+    setUploadMessage("✅ Subject deleted");
+  } catch {
+    setUploadMessage("❌ Failed to delete subject");
+  }
+};
+
 
   
 
@@ -313,6 +326,8 @@ const AdminPanel = () => {
     </div>
   )}
 </div>
+
+<SubjectTable subjects={subjects} deleteSubject={deleteSubject} />
 
 
     {/* Tables */}
