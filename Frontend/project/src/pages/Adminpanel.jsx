@@ -48,7 +48,7 @@ const AdminPanel = () => {
      formdata.append('file', file)
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_BASE}/api/upload-cgpa`, formdata, { withCredentials: true })
+      await axios.post(`${import.meta.env.VITE_API_BASE}/api/admin_pref`, formdata, { withCredentials: true })
       setUploadMessage("file uploaded successfully")
     } catch (error) {
       setUploadMessage("upload failed")

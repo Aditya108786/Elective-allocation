@@ -460,5 +460,6 @@ maxPreference,
 Addsubjects,
 getAllsubjects,
 getMaxPreference,
-alreadyFilled
+alreadyFilled,
+adminpreference
 };

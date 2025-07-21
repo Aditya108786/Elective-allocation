@@ -20,7 +20,8 @@ const{
     getAllstudents,
     getAllsubjects,
     getMaxPreference,
-    alreadyFilled
+    alreadyFilled,
+    adminpreference
 } = require('../controllers/allocationController')
 const adminAuth = require('../middlewares/adminauth')
 const multer = require('multer');
@@ -43,7 +44,8 @@ router.delete('/delete_student/:rollNo', adminAuth, deleteStudent)
 router.get('/getallstudents', adminAuth, getAllstudents)
 router.get('/getAllsubjects',  getAllsubjects)
 router.get('/get-max-pref', getMaxPreference)
-router.get('/alreadyFilled', alreadyFilled)
+router.get('/alreadyFilled', alreadyFilled),
+router.post('/admin_pref', adminAuth, adminpreference)
 
 
 module.exports = router

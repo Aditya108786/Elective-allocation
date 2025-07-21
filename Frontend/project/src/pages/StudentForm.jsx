@@ -9,7 +9,7 @@ const StudentForm = () => {
   const [maxPreferences, setMaxPreferences] = useState(0);
   const [subjects, setSubjects] = useState([]);
   const [message, setMessage] = useState('');
-  const[count, setcount] = useEffect(0)
+  const[count, setcount] = useState(0)
   const navigate = useNavigate();
 
   // Fetch max preferences
@@ -57,7 +57,7 @@ const StudentForm = () => {
 const fetchalreadyFilledpref = async()=>{
       try {
         const res = await axios.get(`${import.meta.env.VITE_API_BASE}/api/alreadyFilled/${rollNo}`)
-           setcount(res)
+           setcount(res.data?.count || 0)
       } catch (error) {
         setMessage("failed to fetch")
       }
