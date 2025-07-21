@@ -45,6 +45,8 @@ const AdminPanel = () => {
     return setUploadMessage("❌ Please select a file");
   }
 
+  
+
   const formdata = new FormData();
   formdata.append('file', file);
 

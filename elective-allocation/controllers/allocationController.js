@@ -392,55 +392,76 @@ const alreadyFilled = async (req, res) => {
   }
 };
 
-const  adminpreference = async(req,res)=>{
-      const filepath = req.file.path
+const adminpreference = async (req, res) => {
+  try {
+    const filepath = req.file?.path;
 
-      if(!filepath){
-        res.status(404).json({message:"file not found"})
+    if (!filepath) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    const workbook = xslx.readFile(filepath);
+    const sheetname = workbook.SheetNames[0];
+    const data = xslx.utils.sheet_to_json(workbook.Sheets[sheetname]);
+
+    // Check if preference columns exist
+    const hasPreferenceCols = Object.keys(data[0] || {}).some((key) =>
+      key.toLowerCase().includes('preference')
+    );
+
+    if (!hasPreferenceCols) {
+      fs.unlinkSync(filepath);
+      return res
+        .status(400)
+        .json({ message: 'No preference columns found in the uploaded file.' });
+    }
+
+    let updated = 0,
+      skipped = 0;
+
+    for (const row of data) {
+      const rollNo = String(row.rollNo || row.RollNo || row.Roll || '0');
+      if (!rollNo) continue;
+
+      const student = await Student.findOne({ rollNo });
+
+      if (!student) {
+        continue;
+      }
+      if (student.preferences && student.preferences.length > 0) {
+        skipped++;
+        continue;
       }
 
-      const workbook = xslx.readFile(filepath)
-      const sheetname = workbook.SheetNames[0]
-      const data = xslx.utils.sheet_to_json(workbook.Sheets[sheetname])
-
-      let updated = 0 , skipped = 0
-
-      for(const row of data){
-        const rollNo = String(row.rollNo || row.RollNo || row.Roll || '0')
-        if(!rollNo) continue;
-
-        const student = await Student.findOne({rollNo})
-
-        if(!student){
-          continue;
+      const prefs = [];
+      Object.keys(row).forEach((key) => {
+        if (key.toLowerCase().includes('preference')) {
+          prefs.push(row[key]);
         }
-        if(student.preferences && student.preferences.length > 0){
-          skipped++;
-          continue
-        }
+      });
 
-        const prefs = []
-
-        Object.keys(row).forEach((key)=>{
-          if(key.toLowerCase().includes('preference')){
-            prefs.push(row[key])
-          }
-        })
-
-        student.preferences = prefs;
-        await student.save();
-        updated++;
-        
+      if (prefs.length === 0) {
+        skipped++;
+        continue;
       }
 
-      fs.unlinksync(filepath)
+      student.preferences = prefs;
+      await student.save();
+      updated++;
+    }
 
-      res.status(200).json({
-        message:'preference upload complete',
-        updated,
-        skipped
-      })
-}
+    fs.unlinkSync(filepath);
+
+    res.status(200).json({
+      message: 'Preference upload complete',
+      updated,
+      skipped,
+    });
+  } catch (error) {
+    console.error('Admin preference upload failed:', error.message);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
 
 
 

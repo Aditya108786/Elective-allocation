@@ -61,7 +61,7 @@ const fetchalreadyFilledpref = async()=>{
   }
       try {
         const res = await axios.get(`${import.meta.env.VITE_API_BASE}/api/alreadyFilled/${rollNo}`)
-           setcount(res.data?.count || 0)
+           setcount(res || 0)
       } catch (error) {
         
         setMessage("failed to fetch")
