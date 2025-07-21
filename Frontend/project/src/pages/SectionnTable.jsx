@@ -17,14 +17,16 @@ const SectionTable = ({ title, data, columns, keys, action }) => {
             {columns.map((col, i) => (
               <th key={i} className="text-left px-4 py-2 border-b">{col}</th>
             ))}
-            {action && <th className="text-left px-4 py-2 border-b">Actions</th>}
+            
           </tr>
         </thead>
         <tbody>
           {data.length === 0 ? (
             <tr>
               <td colSpan={columns.length + (action ? 1 : 0)} className="text-center py-8 text-gray-400">
-                <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+                <svg className="h-8 w-8 mx-auto mb-2 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 4a8 8 0 110 16 8 8 0 010-16z" />
+                </svg>
                 No data available
               </td>
             </tr>
@@ -47,5 +49,4 @@ const SectionTable = ({ title, data, columns, keys, action }) => {
     </div>
   );
 };
-
-export default SectionTable;
+ export default SectionTable
