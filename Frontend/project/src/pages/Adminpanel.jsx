@@ -41,8 +41,8 @@ const AdminPanel = () => {
     }
   };
 
-  const uploadpref = async (e) => {
-    const file = e.target.files[0];
+  const uploadpref = async () => {
+    
   if (!file) {
     return setUploadMessage("❌ Please select a file");
   }
