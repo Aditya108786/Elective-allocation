@@ -42,7 +42,6 @@ const AdminPanel = () => {
   };
 
   const uploadpref = async () => {
-    
   if (!file) {
     return setUploadMessage("❌ Please select a file");
   }
@@ -56,7 +55,7 @@ const AdminPanel = () => {
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
     if (jsonData.length === 0) {
-      alert('The Excel file is empty.');
+      alert('❌ The Excel file is empty.');
       return;
     }
 
@@ -69,19 +68,23 @@ const AdminPanel = () => {
       return;
     }
 
+    const formdata = new FormData();
+    formdata.append('file', file);
 
-  const formdata = new FormData();
-  formdata.append('file', file);
+    try {
+      await axios.post(`${import.meta.env.VITE_API_BASE}/api/admin_pref`, formdata, {
+        withCredentials: true,
+      });
+      setUploadMessage("✅ Preferences file uploaded successfully");
+    } catch (error) {
+      console.error("Upload failed:", error);
+      setUploadMessage("❌ Upload failed");
+    }
+  };
 
-  try {
-    await axios.post(`${import.meta.env.VITE_API_BASE}/api/admin_pref`, formdata, { withCredentials: true });
-    setUploadMessage("✅ Preferences file uploaded successfully");
-  } catch (error) {
-    setUploadMessage("❌ Upload failed");
-  }
+  reader.readAsBinaryString(file); // ← TRIGGER FILE READING
 };
 
-  }
   const allocate = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_BASE}/api/allocate`, { withCredentials: true });
