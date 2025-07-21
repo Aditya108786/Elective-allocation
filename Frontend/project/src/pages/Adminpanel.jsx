@@ -194,6 +194,13 @@ const AdminPanel = () => {
       ⚙ Run Allocation
     </button>
 
+     <button
+      onClick={getallstudents}
+      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-md transition"
+    >
+      show all students
+    </button>
+
     <button
       onClick={startvoice}
       className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-md transition"
@@ -209,54 +216,75 @@ const AdminPanel = () => {
       <p className="text-center mb-6 text-red-600 dark:text-red-400 font-medium">{uploadMessage}</p>
     )}
 
-    {/* Configuration */}
-    <div className="mb-10">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 text-lg font-bold text-white bg-blue-700 hover:bg-blue-800 px-5 py-2 rounded-md mb-4 transition"
-      >
-        <Settings size={20} /> Configuration {open ? <ChevronUp /> : <ChevronDown />}
-      </button>
+    {/* Configuration Panel */}
+<div className="mb-10">
+  <button
+    onClick={() => setOpen(!open)}
+    className="flex items-center justify-between gap-2 w-full text-lg font-semibold text-white bg-blue-700 hover:bg-blue-800 px-5 py-3 rounded-lg shadow-md transition-all"
+  >
+    <span className="flex items-center gap-2">
+      <Settings size={20} /> Configuration
+    </span>
+    {open ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+  </button>
 
-      {open && (
-        <div className="grid md:grid-cols-2 gap-6 bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
-          {/* Add Subject */}
-          <div>
-            <h4 className="font-semibold text-gray-700 dark:text-white mb-2">➕ Add Subject</h4>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Subject name"
-              className="input"
-            />
-            <input
-              type="number"
-              value={seatlimit}
-              onChange={(e) => setSeatlimit(e.target.value)}
-              placeholder="Seat limit"
-              className="input"
-            />
-            <button onClick={addsubjects} className="btn-purple mt-2 w-full">➕ Add</button>
-          </div>
+  {open && (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white dark:bg-gray-900 mt-6 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+      
+      {/* Add Subject */}
+      <div className="flex flex-col gap-3">
+        <h4 className="text-md font-bold text-gray-700 dark:text-white flex items-center gap-2">
+          ➕ Add Subject
+        </h4>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Enter Subject Name"
+          className="px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+        />
+        <input
+          type="number"
+          value={seatlimit}
+          onChange={(e) => setSeatlimit(e.target.value)}
+          placeholder="Seat Limit"
+          className="px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+        />
+        <button
+          onClick={addsubjects}
+          className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-md transition"
+        >
+          ➕ Add Subject
+        </button>
+      </div>
 
-          {/* Max Preferences */}
-          <div>
-            <h4 className="font-semibold text-gray-700 dark:text-white mb-2">🎯 Max Preferences</h4>
-            <select
-              value={maxPref}
-              onChange={(e) => setMaxPref(e.target.value)}
-              className="input"
-            >
-              <option value="">Select max preferences</option>
-              {Array.from({ length: 10 }, (_, i) => (
-                <option key={i + 1} value={i + 1}>{i + 1}</option>
-              ))}
-            </select>
-            <button onClick={maxPreferences} className="btn-orange mt-2 w-full">✅ Set</button>
-          </div>
-        </div>
-      )}
+      {/* Max Preferences */}
+      <div className="flex flex-col gap-3">
+        <h4 className="text-md font-bold text-gray-700 dark:text-white flex items-center gap-2">
+          🎯 Max Preferences
+        </h4>
+        <select
+          value={maxPref}
+          onChange={(e) => setMaxPref(e.target.value)}
+          className="px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+        >
+          <option value="">Select max preferences</option>
+          {Array.from({ length: 10 }, (_, i) => (
+            <option key={i + 1} value={i + 1}>
+              {i + 1}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={maxPreferences}
+          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-md transition"
+        >
+          ✅ Set Preference Limit
+        </button>
+      </div>
     </div>
+  )}
+</div>
+
 
     {/* Tables */}
     <SectionTable title="📋 Allocation Results" data={allocations} columns={['Roll No', 'Name', 'CGPA', 'Allocated']} keys={['rollNo', 'name', 'cgpa', 'allocated']} />
