@@ -40,21 +40,22 @@ const AdminPanel = () => {
     }
   };
 
-  const uploadpref = async()=>{
-     if(!file){
-     return  setUploadMessage("please select a file")
-     }
-
-     const formdata = new FormData(file)
-     formdata.append('file', file)
-
-    try {
-      await axios.post(`${import.meta.env.VITE_API_BASE}/api/admin_pref`, formdata, { withCredentials: true })
-      setUploadMessage("file uploaded successfully")
-    } catch (error) {
-      setUploadMessage("upload failed")
-    }
+  const uploadpref = async () => {
+  if (!file) {
+    return setUploadMessage("❌ Please select a file");
   }
+
+  const formdata = new FormData();
+  formdata.append('file', file);
+
+  try {
+    await axios.post(`${import.meta.env.VITE_API_BASE}/api/admin_pref`, formdata, { withCredentials: true });
+    setUploadMessage("✅ Preferences file uploaded successfully");
+  } catch (error) {
+    setUploadMessage("❌ Upload failed");
+  }
+};
+
 
   const allocate = async () => {
     try {
@@ -295,9 +296,14 @@ const AdminPanel = () => {
       columns={['Roll No', 'Name', 'CGPA', 'Action']}
       keys={['rollNo', 'name', 'cgpa']}
       action={(s) => (
-        <button onClick={() => deletestudent(s.rollNo)} className="btn-danger">
-          <Trash size={16} />
-        </button>
+       <button
+  onClick={() => deletestudent(s.rollNo)}
+  className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900"
+  title="Delete Student"
+>
+  <Trash size={18} className="text-red-600" />
+</button>
+
       )}
     />
   </div>

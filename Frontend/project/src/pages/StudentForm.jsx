@@ -55,10 +55,15 @@ const StudentForm = () => {
 
   useEffect(()=>{
 const fetchalreadyFilledpref = async()=>{
+
+  if(!rollNo){
+    return 
+  }
       try {
         const res = await axios.get(`${import.meta.env.VITE_API_BASE}/api/alreadyFilled/${rollNo}`)
            setcount(res.data?.count || 0)
       } catch (error) {
+        
         setMessage("failed to fetch")
       }
     }
