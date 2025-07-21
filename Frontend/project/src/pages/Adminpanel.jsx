@@ -166,7 +166,7 @@ const AdminPanel = () => {
         <button
           onClick={uploadCSV}
           disabled={loading}
-          className="btn-primary"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"
         >
           <Upload size={18} /> Upload CGPA
         </button>
@@ -182,7 +182,7 @@ const AdminPanel = () => {
         />
         <button
           onClick={uploadpref}
-          className="btn-primary"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"
         >
           <Upload size={18} /> Upload Preferences
         </button>
@@ -190,9 +190,9 @@ const AdminPanel = () => {
 
       {/* Actions */}
       <div className="flex flex-wrap gap-2">
-        <button onClick={allocate} className="btn-secondary">⚙ Run Allocation</button>
-        <button onClick={getallstudents} className="btn-warning">👥 Show Students</button>
-        <button onClick={startvoice} className="btn-voice"><Mic size={18} /> Voice Input</button>
+        <button onClick={allocate} className="btn-secondary bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">⚙ Run Allocation</button>
+        <button onClick={getallstudents} className="btn-warning bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">👥 Show Students</button>
+        <button onClick={startvoice} className="btn-voice bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"><Mic size={18} /> Voice Input</button>
       </div>
     </div>
 
@@ -228,7 +228,7 @@ const AdminPanel = () => {
               placeholder="Seat limit"
               className="input"
             />
-            <button onClick={addsubjects} className="btn-purple mt-2 w-full">➕ Add</button>
+            <button onClick={addsubjects} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">➕ Add</button>
           </div>
 
           {/* Max Preferences */}
@@ -244,7 +244,7 @@ const AdminPanel = () => {
                 <option key={i + 1} value={i + 1}>{i + 1}</option>
               ))}
             </select>
-            <button onClick={maxPreferences} className="btn-orange mt-2 w-full">✅ Set</button>
+            <button onClick={maxPreferences} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">✅ Set</button>
           </div>
         </div>
       )}
