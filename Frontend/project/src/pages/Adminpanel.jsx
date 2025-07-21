@@ -20,6 +20,8 @@ const AdminPanel = () => {
   const [students, setStudents] = useState([]);
   const [subjects, setSubjects] = useState([]);
 
+  
+
   const uploadCSV = async () => {
     if (!file) return setUploadMessage("❌ Please select a file first.");
 
@@ -36,6 +38,22 @@ const AdminPanel = () => {
       setLoading(false);
     }
   };
+
+  const uploadpref = async()=>{
+     if(!file){
+     return  setUploadMessage("please select a file")
+     }
+
+     const formdata = new FormData(file)
+     formdata.append('file', file)
+
+    try {
+      await axios.post(`${import.meta.env.VITE_API_BASE}/api/upload-cgpa`, formdata, { withCredentials: true })
+      setUploadMessage("file uploaded successfully")
+    } catch (error) {
+      setUploadMessage("upload failed")
+    }
+  }
 
   const allocate = async () => {
     try {
@@ -108,6 +126,8 @@ const AdminPanel = () => {
     fetchSubjects();
   }, []);
 
+  
+
   const voicecommand = (transcript) => {
     if (transcript.includes("choose file")) fileinputref.current?.click();
     else if (transcript.includes("upload")) uploadCSV();
@@ -142,6 +162,13 @@ const AdminPanel = () => {
           <button onClick={uploadCSV} disabled={loading} className="btn bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 rounded-md">
             <Upload size={18} /> Upload CGPA CSV
           </button>
+
+          <input type="file"
+           ref={fileinputref}
+           onChange={(e)=> setFile(e.target.files[0])}
+           className="block text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
+          />
+          <button onClick={uploadpref} className="btn bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 rounded-md">Upload preferences</button>
           <button onClick={allocate} className="btn bg-blue-600 hover:bg-blue-700 text-white rounded-md">⚙ Run Allocation</button>
           <button onClick={getallstudents} className="btn bg-yellow-500 hover:bg-yellow-600 text-white rounded-md">👥 Show Students</button>
           <button onClick={startvoice} className="btn bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 rounded-md">

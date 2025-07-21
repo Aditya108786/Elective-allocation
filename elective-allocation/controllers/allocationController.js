@@ -7,7 +7,7 @@ const maxpref = require('../models/settingschema')
 const jwt = require('jsonwebtoken');
 const Subject = require('../models/Subject');
 const { error } = require('console');
-
+const xslx = require('xlsx')
 
 
 const uploadCGPAFromCSV = async (req, res) => {
@@ -52,6 +52,9 @@ const submitPreferences = async (req, res) => {
     if (!rollNo || !preferences) {
       return res.status(400).json({ error: 'Invalid roll number or preferences' });
     }
+
+    
+
 
     const maxpreference = await maxpref.findOne()
 
@@ -366,6 +369,80 @@ const getMaxPreference = async (req, res) => {
   }
 };
 
+const alreadyFilled = async (req, res) => {
+  try {
+    const { rollNo } = req.params;
+
+    if (!rollNo) {
+      return res.status(400).json({ message: "Roll number is required" });
+    }
+
+    const student = await Student.findOne({ rollNo });
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const count = student.preferences?.length || 0;
+
+    return res.status(200).json({ count });
+  } catch (error) {
+    console.error("Error checking preferences:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const  adminpreference = async(req,res)=>{
+      const filepath = req.file.path
+
+      if(!filepath){
+        res.status(404).json({message:"file not found"})
+      }
+
+      const workbook = xslx.readFile(filepath)
+      const sheetname = workbook.SheetNames[0]
+      const data = xslx.utils.sheet_to_json(workbook.Sheets[sheetname])
+
+      let updated = 0 , skipped = 0
+
+      for(const row of data){
+        const rollNo = String(row.rollNo || row.RollNo || row.Roll || '0')
+        if(!rollNo) continue;
+
+        const student = await Student.findOne({rollNo})
+
+        if(!student){
+          continue;
+        }
+        if(student.preferences && student.preferences.length > 0){
+          skipped++;
+          continue
+        }
+
+        const prefs = []
+
+        Object.keys(row).forEach((key)=>{
+          if(key.toLowerCase().includes('preference')){
+            prefs.push(row[key])
+          }
+        })
+
+        student.preferences = prefs;
+        await student.save();
+        updated++;
+        
+      }
+
+      fs.unlinksync(filepath)
+
+      res.status(200).json({
+        message:'preference upload complete',
+        updated,
+        skipped
+      })
+}
+
+
 
 module.exports = {
   uploadCGPAFromCSV,
@@ -382,5 +459,6 @@ module.exports = {
 maxPreference, 
 Addsubjects,
 getAllsubjects,
-getMaxPreference
+getMaxPreference,
+alreadyFilled
 };

@@ -9,6 +9,7 @@ const StudentForm = () => {
   const [maxPreferences, setMaxPreferences] = useState(0);
   const [subjects, setSubjects] = useState([]);
   const [message, setMessage] = useState('');
+  const[count, setcount] = useEffect(0)
   const navigate = useNavigate();
 
   // Fetch max preferences
@@ -51,6 +52,21 @@ const StudentForm = () => {
       setRollNo(storedRoll);
     }
   }, [navigate]);
+
+  useEffect(()=>{
+const fetchalreadyFilledpref = async()=>{
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE}/api/alreadyFilled/${rollNo}`)
+           setcount(res)
+      } catch (error) {
+        setMessage("failed to fetch")
+      }
+    }
+
+    fetchalreadyFilledpref()
+  },[rollNo])
+
+  
 
   // Submit preferences
   const submitPreferences = async () => {
@@ -164,16 +180,17 @@ const StudentForm = () => {
         ))}
 
         <button
-          onClick={submitPreferences}
-          disabled={preferences.some(p => p === '')}
-          className={`w-full py-3 px-6 rounded-md text-white font-semibold text-lg mt-4 ${
-            preferences.some(p => p === '')
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700'
-          }`}
-        >
-          Submit Preferences
-        </button>
+  onClick={submitPreferences}
+  disabled={preferences.some(p => p === '') || count > 0}
+  className={`w-full py-3 px-6 rounded-md text-white font-semibold text-lg mt-4 ${
+    preferences.some(p => p === '') || count > 0
+      ? 'bg-gray-400 cursor-not-allowed'
+      : 'bg-blue-600 hover:bg-blue-700'
+  }`}
+>
+  Submit Preferences
+</button>
+
 
         <button
           onClick={startVoice}
