@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
+import * as XLSX from 'xlsx'
 import { useNavigate } from 'react-router-dom';
 import { startvoiceRecognition } from '../Audioinput';
 import { ChevronDown, ChevronUp, Upload, Trash, Settings, Mic } from 'lucide-react';
@@ -40,12 +41,34 @@ const AdminPanel = () => {
     }
   };
 
-  const uploadpref = async () => {
+  const uploadpref = async (e) => {
+    const file = e.target.files[0];
   if (!file) {
     return setUploadMessage("❌ Please select a file");
   }
 
-  
+  const reader = new FileReader();
+  reader.onload = async (evt) => {
+    const bstr = evt.target.result;
+    const workbook = XLSX.read(bstr, { type: 'binary' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+    if (jsonData.length === 0) {
+      alert('The Excel file is empty.');
+      return;
+    }
+
+    const hasPreferenceColumn = Object.keys(jsonData[0]).some((key) =>
+      key.toLowerCase().includes('preference')
+    );
+
+    if (!hasPreferenceColumn) {
+      alert('❌ No "preference" columns found in the Excel file.');
+      return;
+    }
+
 
   const formdata = new FormData();
   formdata.append('file', file);
@@ -58,7 +81,7 @@ const AdminPanel = () => {
   }
 };
 
-
+  }
   const allocate = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_BASE}/api/allocate`, { withCredentials: true });
