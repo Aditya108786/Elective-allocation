@@ -44,7 +44,7 @@ router.delete('/delete_student/:rollNo', adminAuth, deleteStudent)
 router.get('/getallstudents', adminAuth, getAllstudents)
 router.get('/getAllsubjects',  getAllsubjects)
 router.get('/get-max-pref', getMaxPreference)
-router.get('/alreadyFilled', alreadyFilled),
+router.get('/alreadyFilled/:rollNo', alreadyFilled),
 router.post('/admin_pref', adminAuth, adminpreference)
 
 
