@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { startvoiceRecognition } from '../Audioinput';
 import { ChevronDown, ChevronUp, Upload, Trash, Settings, Mic } from 'lucide-react';
+import SectionTable from './SectionnTable';
 
 const AdminPanel = () => {
   const navigate = useNavigate();
