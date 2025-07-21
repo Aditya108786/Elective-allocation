@@ -154,47 +154,55 @@ const AdminPanel = () => {
     </div>
 
     {/* Upload Section */}
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-      {/* CGPA Upload */}
-      <div className="flex items-center gap-2">
-        <input
-          type="file"
-          ref={fileinputref}
-          onChange={(e) => setFile(e.target.files[0])}
-          className="file-input"
-        />
-        <button
-          onClick={uploadCSV}
-          disabled={loading}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"
-        >
-          <Upload size={18} /> Upload CGPA
-        </button>
-      </div>
+    {/* Upload Section */}
+<div className="bg-white border rounded-xl p-6 shadow-sm mb-8">
+  <h3 className="text-xl font-semibold text-gray-800 mb-1">Data Management & Actions</h3>
+  <p className="text-sm text-gray-500 mb-4">Upload student data and run the allocation algorithm.</p>
 
-      {/* Preferences Upload */}
-      <div className="flex items-center gap-2">
-        <input
-          type="file"
-          ref={fileinputref}
-          onChange={(e) => setFile(e.target.files[0])}
-          className="file-input"
-        />
-        <button
-          onClick={uploadpref}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"
-        >
-          <Upload size={18} /> Upload Preferences
-        </button>
-      </div>
+  <div className="mb-4">
+    <label className="block mb-1 font-medium text-gray-700">Student Data (CSV)</label>
+    <input
+      type="file"
+      ref={fileinputref}
+      onChange={(e) => setFile(e.target.files[0])}
+      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
+                 file:rounded-md file:border-0 file:text-sm file:font-semibold
+                 file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+    />
+  </div>
 
-      {/* Actions */}
-      <div className="flex flex-wrap gap-2">
-        <button onClick={allocate} className="btn-secondary bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">⚙ Run Allocation</button>
-        <button onClick={getallstudents} className="btn-warning bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">👥 Show Students</button>
-        <button onClick={startvoice} className="btn-voice bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"><Mic size={18} /> Voice Input</button>
-      </div>
-    </div>
+  <div className="flex flex-wrap gap-4">
+    <button
+      onClick={uploadCSV}
+      disabled={loading}
+      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-md transition"
+    >
+      <Upload size={16} /> Upload CGPA
+    </button>
+
+    <button
+      onClick={uploadpref}
+      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-md transition"
+    >
+      <Upload size={16} /> Upload Prefs
+    </button>
+
+    <button
+      onClick={allocate}
+      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-md transition"
+    >
+      ⚙ Run Allocation
+    </button>
+
+    <button
+      onClick={startvoice}
+      className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-md transition"
+    >
+      <Mic size={16} /> Voice Input
+    </button>
+  </div>
+</div>
+
 
     {/* Upload Message */}
     {uploadMessage && (
@@ -228,7 +236,7 @@ const AdminPanel = () => {
               placeholder="Seat limit"
               className="input"
             />
-            <button onClick={addsubjects} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">➕ Add</button>
+            <button onClick={addsubjects} className="btn-purple mt-2 w-full">➕ Add</button>
           </div>
 
           {/* Max Preferences */}
@@ -244,7 +252,7 @@ const AdminPanel = () => {
                 <option key={i + 1} value={i + 1}>{i + 1}</option>
               ))}
             </select>
-            <button onClick={maxPreferences} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">✅ Set</button>
+            <button onClick={maxPreferences} className="btn-orange mt-2 w-full">✅ Set</button>
           </div>
         </div>
       )}
