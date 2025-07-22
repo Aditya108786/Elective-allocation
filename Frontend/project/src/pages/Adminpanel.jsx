@@ -179,10 +179,10 @@ const configuration = ()=>{
   const lower = transcript.toLowerCase();
 
   if (lower.includes("choose file")) fileinputref.current?.click();
-  else if (lower.includes("upload")) uploadCSV();
+  else if (lower.includes("upload students")) uploadCSV();
   else if (lower.includes("allocate")) allocate();
   else if (lower.includes("homepage")) navigate('/');
-  else if (lower.includes("preference")) uploadpref();
+  else if (lower.includes("upload preference")) uploadpref();
   else if (lower.includes("show all students")) getallstudents();
   else if (lower.includes("configuration")) configuration();
   else if (lower.startsWith("subject ")) {
