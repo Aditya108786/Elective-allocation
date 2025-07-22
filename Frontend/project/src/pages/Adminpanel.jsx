@@ -168,16 +168,61 @@ const AdminPanel = () => {
   }
 };
 
+const configuration = ()=>{
+   setOpen(!open)
+}
+
 
   
 
   const voicecommand = (transcript) => {
-    if (transcript.includes("choose file")) fileinputref.current?.click();
-    else if (transcript.includes("upload")) uploadCSV();
-    else if (transcript.includes("allocate")) allocate();
-    else if (transcript.includes("homepage")) navigate('/');
-    else setUploadMessage("❌ Unrecognizable voice command.");
-  };
+  const lower = transcript.toLowerCase();
+
+  if (lower.includes("choose file")) fileinputref.current?.click();
+  else if (lower.includes("upload")) uploadCSV();
+  else if (lower.includes("allocate")) allocate();
+  else if (lower.includes("homepage")) navigate('/');
+  else if (lower.includes("preference")) uploadpref();
+  else if (lower.includes("show all students")) getallstudents();
+  else if (lower.includes("configuration")) configuration();
+  else if (lower.startsWith("subject ")) {
+    const subj = transcript.replace(/subject/i, "").trim();
+    setName(subj);
+  }
+  else if (lower.includes("add")) addsubjects();
+  else if (lower.includes("seat limit")) {
+    const limit = transcript.replace(/seat limit/i, "").trim();
+    setSeatlimit(limit);
+  }
+  else if (lower.includes("maximum preference")) {
+    const pref = transcript.replace(/maximum preference/i, "").trim();
+    setMaxPref(pref);
+  }
+  else if (lower.includes("set limit")) {
+    maxPreferences();
+  }
+  else if (lower.includes("delete subject")) {
+    const subjectToDelete = lower.replace("delete subject", "").trim();
+    const matched = subjects.find((s) => s.name.toLowerCase() === subjectToDelete);
+    if (matched) {
+      deleteSubject(matched._id);
+    } else {
+      setUploadMessage(`❌ Subject "${subjectToDelete}" not found`);
+    }
+  }
+  else if (lower.includes("delete student")) {
+    const roll = lower.replace("delete student", "").trim();
+    if (roll) {
+      deletestudent(roll);
+    } else {
+      setUploadMessage(`❌ Invalid roll number`);
+    }
+  }
+  else {
+    setUploadMessage("❌ Unrecognizable voice command.");
+  }
+};
+
 
   const startvoice = startvoiceRecognition(voicecommand);
 
@@ -261,7 +306,7 @@ const AdminPanel = () => {
     {/* Configuration Panel */}
 <div className="mb-10">
   <button
-    onClick={() => setOpen(!open)}
+    onClick={configuration}
     className="flex items-center justify-between gap-2 w-full text-lg font-semibold text-white bg-blue-700 hover:bg-blue-800 px-5 py-3 rounded-lg shadow-md transition-all"
   >
     <span className="flex items-center gap-2">
