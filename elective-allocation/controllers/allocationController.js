@@ -142,100 +142,47 @@ const submitPreferencesBulk = async (req, res) => {
 // --- In-memory Lock ---
 // This flag prevents the entire allocation process from running more than once at the same time.
 // It should be defined at the module level (outside the function).
-let isAllocationRunning = false;
-
-const allocateSubjects = async (req, res) => {
-  if (isAllocationRunning) {
-    return res.status(409).json({
-      message: "An allocation process is already running. Please wait for it to complete.",
-    });
-  }
-  isAllocationRunning = true;
-  console.log("\n[ALLOCATION-DEBUG] --- Starting Allocation Process ---");
+const allocateSubjects = async () => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
   try {
-    const studentsToAllocate = await Student.find({ allocated: null }).sort({ cgpa: -1, createdAt: 1 });
-    console.log(`[ALLOCATION-DEBUG] Found ${studentsToAllocate.length} students to allocate.`);
+    // Reset all allocations
+    await Student.updateMany({}, { allocated: null }, { session });
 
-    if (studentsToAllocate.length === 0) {
-      console.log("[ALLOCATION-DEBUG] No students to allocate. Exiting.");
-      isAllocationRunning = false; // Release lock
-      return res.status(200).json({ message: "No new students to allocate.", allocation: [] });
-    }
+    // Fetch all students sorted by CGPA (descending)
+    const students = await Student.find({ preferences: { $ne: [] } })
+      .sort({ cgpa: -1 })
+      .session(session);
 
-    const bulkStudentUpdates = [];
-
-    for (const student of studentsToAllocate) {
-      console.log(`[ALLOCATION-DEBUG] Processing Student: ${student.rollNo} (CGPA: ${student.cgpa}) with Preferences: [${student.preferences.join(', ')}]`);
-      let allocatedForThisStudent = false;
-
-      for (const preference of student.preferences) {
-        if(allocatedForThisStudent) continue; // Skip if already allocated in this run
-
-        console.log(`[ALLOCATION-DEBUG] -> Checking preference: "${preference}"`);
-        
-        const subject = await Subject.findOneAndUpdate(
-          {
-            name: preference,
-            $expr: { $lt: ["$seatsFilled", "$seatlimit"] },
-          },
-          { $inc: { seatsFilled: 1 } }
-        );
-
-        if (subject) {
-          console.log(`[ALLOCATION-DEBUG] -> SUCCESS! Allocated "${preference}" to ${student.rollNo}. Old seat count: ${subject.seatsFilled - 1}`);
-          allocatedForThisStudent = true;
-          bulkStudentUpdates.push({
-            updateOne: {
-              filter: { _id: student._id },
-              update: { $set: { allocated: preference } },
-            },
-          });
-          break; // Move to the next student
-        } else {
-          // This log is crucial for finding the problem
-          const reason = await Subject.findOne({ name: preference });
-          if (!reason) {
-            console.log(`[ALLOCATION-DEBUG] -> FAILED to allocate "${preference}". Reason: Subject name does not match anything in the database.`);
-          } else {
-            console.log(`[ALLOCATION-DEBUG] -> FAILED to allocate "${preference}". Reason: No seats available (Seats Filled: ${reason.seatsFilled}, Limit: ${reason.seatlimit}).`);
-          }
-        }
-      }
-      if (!allocatedForThisStudent) {
-        console.log(`[ALLOCATION-DEBUG] Finished all preferences for ${student.rollNo}, but no subject could be allocated.`);
-      }
-    }
-
-    console.log(`[ALLOCATION-DEBUG] Preparing to execute ${bulkStudentUpdates.length} updates in the database.`);
-    if (bulkStudentUpdates.length > 0) {
-      await Student.bulkWrite(bulkStudentUpdates);
-      console.log("[ALLOCATION-DEBUG] Bulk update complete.");
-    }
-
-    const finalStudentList = await Student.find().sort({ cgpa: -1 });
-    const result = finalStudentList.map(s => ({
-      rollNo: s.rollNo,
-      name: s.name,
-      cgpa: s.cgpa,
-      registeredAt: s.createdAt,
-      allocated: s.allocated || 'Not Allocated',
-    }));
-    
-    console.log("[ALLOCATION-DEBUG] --- Allocation Process Finished ---");
-    res.status(200).json({
-      message: `Allocation complete. ${bulkStudentUpdates.length} students were successfully allocated.`,
-      allocation: result,
+    // Load subject seat limits
+    const subjects = await Subject.find().session(session);
+    const seatMap = {};
+    subjects.forEach((subj) => {
+      seatMap[subj.name.toLowerCase()] = subj.seatLimit;
     });
 
+    for (const student of students) {
+      for (const pref of student.preferences) {
+        const subjName = pref.trim().toLowerCase();
+        if (seatMap[subjName] > 0) {
+          student.allocated = subjName;
+          seatMap[subjName] -= 1;
+          await student.save({ session });
+          break; // allocation done, move to next student
+        }
+      }
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+    console.log("✅ Allocation complete");
   } catch (error) {
-    console.error("CRITICAL ALLOCATION ERROR:", error);
-    res.status(500).json({ error: "An unexpected error occurred during allocation.", details: error.message });
-  } finally {
-    isAllocationRunning = false;
+    await session.abortTransaction();
+    session.endSession();
+    console.error("❌ Allocation failed:", error);
   }
 };
-
 
 
 const resetSystem = async (req, res) => {
