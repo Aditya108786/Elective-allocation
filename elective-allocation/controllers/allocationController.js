@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose')
 const csv = require('csv-parser');
 const { Readable } = require('stream');
 const Student = require('../models/Student');
