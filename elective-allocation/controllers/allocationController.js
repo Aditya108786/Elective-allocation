@@ -192,7 +192,7 @@ const allocateSubjects = async (req, res) => {
     session.endSession();
 
     console.log("✅ Allocation complete");
-    const updatedStudents = await Student.find();
+    const updatedStudents = await Student.find().session(session);
     return res.status(200).json({
   message: "Allocation complete",
   students: updatedStudents,
