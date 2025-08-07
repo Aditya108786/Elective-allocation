@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const Subject = require('../models/Subject');
 const { error } = require('console');
 const xslx = require('xlsx')
+import mongoose from 'mongoose';
 
 
 const uploadCGPAFromCSV = async (req, res) => {
