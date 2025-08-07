@@ -88,16 +88,30 @@ const AdminPanel = () => {
 };
 
   const allocate = async () => {
-    try {
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE}/api/allocate`, { withCredentials: true });
-      setAllocations(res.data.allocation || []);
-      setUploadMessage("Allocated")
-    } catch(error) {
-      console.error("❌ Allocation failed - full error:\n", JSON.stringify(error, null, 2));
+  try {
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE}/api/allocate`, {
+      withCredentials: true
+    });
 
-      setUploadMessage("❌ Allocation failed.");
+    console.log("✅ Allocation response:", res.data);
+
+    if (res.data && res.data.allocation) {
+      setAllocations(res.data.allocation);
+      setUploadMessage("✅ Allocation completed successfully.");
+    } else {
+      setUploadMessage("⚠️ No allocation data received.");
     }
-  };
+
+  } catch (error) {
+    console.error("❌ Allocation failed - full error:\n", JSON.stringify(error, null, 2));
+
+    // If backend sent error details
+    const backendMessage = error?.response?.data?.error || error.message;
+
+    setUploadMessage(`❌ Allocation failed: ${backendMessage}`);
+  }
+};
+
 
   const addsubjects = async () => {
     if (!name || !seatlimit) return setUploadMessage("❌ Subject name and seat limit are required");
