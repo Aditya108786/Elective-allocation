@@ -128,48 +128,28 @@ const submitPreferencesBulk = async (req, res) => {
 
 const allocateSubjects = async (req, res) => {
   try {
-    const seatMap = {};
-    
-    // Fetch all subjects
-    const subjects = await Subject.find({});
-    
-    // Create map of subjects with current seat info
-    subjects.forEach((subject) => {
-      seatMap[subject.name.toLowerCase()] = {
-        _id: subject._id,
-        seatlimit: subject.seatlimit,
-        seatsFilled: subject.seatsFilled || 0
-      };
-    });
-
-    // Fetch students not yet allocated, sorted by CGPA descending and createdAt ascending
     const students = await Student.find({ allocated: null }).sort({ cgpa: -1, createdAt: 1 });
 
     for (let student of students) {
       for (let pref of student.preferences) {
-        const subjectName = pref.toLowerCase(); // normalize case
-        const subject = seatMap[subjectName];
+        // Try atomic update of seatsFilled
+        const subject = await Subject.findOneAndUpdate(
+          { name: pref, $expr: { $lt: ["$seatsFilled", "$seatlimit"] } },
+          { $inc: { seatsFilled: 1 } },
+          { new: true }
+        );
 
-        if (subject && subject.seatlimit > subject.seatsFilled) {
-          // Allocate subject to student
+        if (subject) {
           student.allocated = pref;
-          subject.seatsFilled += 1;
           await student.save();
-          break;
+          break; // Move to next student after allocation
         }
       }
     }
 
-    // Now update the seatsFilled count in DB
-    for (const subjName in seatMap) {
-      const subjData = seatMap[subjName];
-      await Subject.findByIdAndUpdate(subjData._id, {
-        seatsFilled: subjData.seatsFilled
-      });
-    }
+    const updatedStudents = await Student.find().sort({ cgpa: -1 });
 
-    // Prepare allocation result
-    const result = students.map(s => ({
+    const result = updatedStudents.map(s => ({
       rollNo: s.rollNo,
       name: s.name,
       cgpa: s.cgpa,
@@ -179,7 +159,6 @@ const allocateSubjects = async (req, res) => {
 
     res.status(200).json({ allocation: result });
   } catch (error) {
-    console.error("Error in allocation:", error);
     res.status(500).json({ error: error.message });
   }
 };
