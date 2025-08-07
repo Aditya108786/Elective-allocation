@@ -190,7 +190,11 @@ const allocateSubjects = async (req, res) => {
     session.endSession();
 
     console.log("✅ Allocation complete");
-    return res.status(200).json({ message: "Allocation complete" }); // ✅ Send response
+    const updatedStudents = await Student.find();
+    return res.status(200).json({
+  message: "Allocation complete",
+  students: updatedStudents,
+}); // ✅ Send response
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
