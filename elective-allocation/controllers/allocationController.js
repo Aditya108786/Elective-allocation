@@ -145,22 +145,13 @@ const allocateSubjects = async (req, res) => {
 
         if (subject && subject.seatsFilled < subject.seatlimit) {
           subject.seatsFilled += 1;
+          await subject.save({ session });  // ✅ Save the subject immediately
           student.allocated = pref;
+          await student.save({ session });  // ✅ Save the student immediately
           break;
         }
       }
     }
-
-    // Save all updates inside the transaction
-    const updates = [];
-    for (let subject of subjectMap.values()) {
-      updates.push(subject.save({ session }));
-    }
-    for (let student of students) {
-      updates.push(student.save({ session }));
-    }
-
-    await Promise.all(updates);
 
     await session.commitTransaction();
     session.endSession();
@@ -184,6 +175,7 @@ const allocateSubjects = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 const resetSystem = async (req, res) => {
   try {
