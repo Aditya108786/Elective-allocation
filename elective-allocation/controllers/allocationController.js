@@ -128,28 +128,42 @@ const submitPreferencesBulk = async (req, res) => {
 
 const allocateSubjects = async (req, res) => {
   try {
+    const seatMap = {};
+    const subjects = await Subject.find({});
     const students = await Student.find({ allocated: null }).sort({ cgpa: -1, createdAt: 1 });
 
+    // Initialize seatMap correctly
+    subjects.forEach((subject) => {
+      seatMap[subject.name] = {
+        _id: subject._id,
+        seatlimit: subject.seatlimit,
+        seatsFilled: subject.seatsFilled || 0,  // ✅ fixed key name
+      };
+    });
+
+    // Allocation logic
     for (let student of students) {
       for (let pref of student.preferences) {
-        // Try atomic update of seatsFilled
-        const subject = await Subject.findOneAndUpdate(
-          { name: pref, $expr: { $lt: ["$seatsFilled", "$seatlimit"] } },
-          { $inc: { seatsFilled: 1 } },
-          { new: true }
-        );
+        let subject = seatMap[pref];
 
-        if (subject) {
+        if (subject && subject.seatlimit > subject.seatsFilled) {
           student.allocated = pref;
+          subject.seatsFilled += 1;  // ✅ now updated correctly
           await student.save();
-          break; // Move to next student after allocation
+          break;
         }
       }
     }
 
-    const updatedStudents = await Student.find().sort({ cgpa: -1 });
+    // Save back updated seatsFilled to DB
+    for (const subjName in seatMap) {
+      await Subject.findByIdAndUpdate(seatMap[subjName]._id, {
+        seatsFilled: seatMap[subjName].seatsFilled,
+      });
+    }
 
-    const result = updatedStudents.map(s => ({
+    // Result summary
+    const result = students.map((s) => ({
       rollNo: s.rollNo,
       name: s.name,
       cgpa: s.cgpa,
