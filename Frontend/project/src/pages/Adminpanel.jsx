@@ -92,7 +92,9 @@ const AdminPanel = () => {
       const res = await axios.get(`${import.meta.env.VITE_API_BASE}/api/allocate`, { withCredentials: true });
       setAllocations(res.data.allocation || []);
       setUploadMessage("Allocated")
-    } catch {
+    } catch(error) {
+      console.error("❌ Allocation failed - full error:\n", JSON.stringify(error, null, 2));
+
       setUploadMessage("❌ Allocation failed.");
     }
   };
