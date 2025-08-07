@@ -515,6 +515,7 @@ const deletesubject = async(req,res)=>{
 const deleteall = async(req, res)=>{
      try {
       const result = await Student.deleteMany({})
+      await Subject.updateMany({}, { seatsFilled: 0 });
       res.status(200).json({message:'All student deleted', deletedCount:result.deletedCount})
      } catch (error) {
        res.status(500).json({error:'Faild to delete students'})
