@@ -127,9 +127,12 @@ const submitPreferencesBulk = async (req, res) => {
 };
 
 const allocateSubjects = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const students = await Student.find({ allocated: null }).sort({ cgpa: -1, createdAt: 1 });
-    const subjects = await Subject.find();
+    const students = await Student.find({ allocated: null }).sort({ cgpa: -1, createdAt: 1 }).session(session);
+    const subjects = await Subject.find().session(session);
 
     const subjectMap = new Map();
     subjects.forEach(subject => {
@@ -139,6 +142,7 @@ const allocateSubjects = async (req, res) => {
     for (let student of students) {
       for (let pref of student.preferences) {
         const subject = subjectMap.get(pref);
+
         if (subject && subject.seatsFilled < subject.seatlimit) {
           subject.seatsFilled += 1;
           student.allocated = pref;
@@ -147,17 +151,21 @@ const allocateSubjects = async (req, res) => {
       }
     }
 
-    // Save updates
+    // Save all updates inside the transaction
     const updates = [];
     for (let subject of subjectMap.values()) {
-      updates.push(subject.save());
+      updates.push(subject.save({ session }));
     }
     for (let student of students) {
-      updates.push(student.save());
+      updates.push(student.save({ session }));
     }
 
     await Promise.all(updates);
 
+    await session.commitTransaction();
+    session.endSession();
+
+    // Fetch updated students (outside transaction)
     const updatedStudents = await Student.find().sort({ cgpa: -1 });
 
     const result = updatedStudents.map(s => ({
@@ -171,10 +179,11 @@ const allocateSubjects = async (req, res) => {
     res.status(200).json({ allocation: result });
 
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     res.status(500).json({ error: error.message });
   }
 };
-
 
 const resetSystem = async (req, res) => {
   try {
