@@ -145,85 +145,74 @@ const submitPreferencesBulk = async (req, res) => {
 let isAllocationRunning = false;
 
 const allocateSubjects = async (req, res) => {
-  // --- Step 1: Prevent Concurrent Execution (The Lock) ---
-  // If the allocation is already running, immediately reject the new request.
-  // This stops the "double-click" problem and prevents a race condition before it starts.
   if (isAllocationRunning) {
     return res.status(409).json({
       message: "An allocation process is already running. Please wait for it to complete.",
     });
   }
-
-  // Set the lock. Now, any other request that comes in will be stopped by the check above.
   isAllocationRunning = true;
+  console.log("\n[ALLOCATION-DEBUG] --- Starting Allocation Process ---");
 
   try {
-    // --- Step 2: Fetch Students ---
-    // Get all students who need allocation, sorted by the highest CGPA first.
-    // This is the correct way to prioritize top-performing students.
     const studentsToAllocate = await Student.find({ allocated: null }).sort({ cgpa: -1, createdAt: 1 });
+    console.log(`[ALLOCATION-DEBUG] Found ${studentsToAllocate.length} students to allocate.`);
 
     if (studentsToAllocate.length === 0) {
-        // If there's no one to allocate, we can stop early.
-        return res.status(200).json({ message: "No new students to allocate.", allocation: [] });
+      console.log("[ALLOCATION-DEBUG] No students to allocate. Exiting.");
+      isAllocationRunning = false; // Release lock
+      return res.status(200).json({ message: "No new students to allocate.", allocation: [] });
     }
 
-    // This array will store all the student update operations. We will run them all at once at the end.
     const bulkStudentUpdates = [];
 
-    // --- Step 3: Iterate and Allocate Atomically ---
-    // Loop through each student in order of their rank.
     for (const student of studentsToAllocate) {
-      // Loop through the student's preferences in their chosen order.
+      console.log(`[ALLOCATION-DEBUG] Processing Student: ${student.rollNo} (CGPA: ${student.cgpa}) with Preferences: [${student.preferences.join(', ')}]`);
+      let allocatedForThisStudent = false;
+
       for (const preference of student.preferences) {
+        if(allocatedForThisStudent) continue; // Skip if already allocated in this run
+
+        console.log(`[ALLOCATION-DEBUG] -> Checking preference: "${preference}"`);
         
-        // --- THIS IS THE MOST CRITICAL PIECE OF CODE ---
-        // Instead of checking seats in JS, we ask the database to do it atomically.
-        // This single command tells the database:
-        // 1. Find a subject where the name matches the preference AND...
-        // 2. ...its `seatsFilled` is still less than its `seatlimit`.
-        // 3. If you find one, IMMEDIATELY increment `seatsFilled` by 1.
-        // This entire find-check-and-update operation is ATOMIC. No other request can
-        // interfere in the middle of it. This 100% prevents over-allocation.
         const subject = await Subject.findOneAndUpdate(
           {
             name: preference,
             $expr: { $lt: ["$seatsFilled", "$seatlimit"] },
           },
-          { 
-            $inc: { seatsFilled: 1 } 
-          }
+          { $inc: { seatsFilled: 1 } }
         );
 
-        // If 'subject' is not null, it means we successfully found and reserved a seat.
         if (subject) {
-          // The student is successfully allocated.
-          // We PREPARE the update operation but do not run it yet.
-          // This is far more efficient than calling `student.save()` here.
+          console.log(`[ALLOCATION-DEBUG] -> SUCCESS! Allocated "${preference}" to ${student.rollNo}. Old seat count: ${subject.seatsFilled - 1}`);
+          allocatedForThisStudent = true;
           bulkStudentUpdates.push({
             updateOne: {
               filter: { _id: student._id },
               update: { $set: { allocated: preference } },
             },
           });
-          
-          // Allocation for this student is done, so we break the inner loop
-          // and move on to the next student in the high-priority list.
-          break; 
+          break; // Move to the next student
+        } else {
+          // This log is crucial for finding the problem
+          const reason = await Subject.findOne({ name: preference });
+          if (!reason) {
+            console.log(`[ALLOCATION-DEBUG] -> FAILED to allocate "${preference}". Reason: Subject name does not match anything in the database.`);
+          } else {
+            console.log(`[ALLOCATION-DEBUG] -> FAILED to allocate "${preference}". Reason: No seats available (Seats Filled: ${reason.seatsFilled}, Limit: ${reason.seatlimit}).`);
+          }
         }
+      }
+      if (!allocatedForThisStudent) {
+        console.log(`[ALLOCATION-DEBUG] Finished all preferences for ${student.rollNo}, but no subject could be allocated.`);
       }
     }
 
-    // --- Step 4: Execute All Updates Efficiently ---
-    // Now, we take all the prepared student updates and send them to the database
-    // in a single, highly efficient `bulkWrite` operation.
-    // This is much faster than using `Promise.all` with many individual `.save()` calls.
+    console.log(`[ALLOCATION-DEBUG] Preparing to execute ${bulkStudentUpdates.length} updates in the database.`);
     if (bulkStudentUpdates.length > 0) {
       await Student.bulkWrite(bulkStudentUpdates);
+      console.log("[ALLOCATION-DEBUG] Bulk update complete.");
     }
 
-    // --- Step 5: Send the Final Result ---
-    // Fetch the final, updated list to return to the admin.
     const finalStudentList = await Student.find().sort({ cgpa: -1 });
     const result = finalStudentList.map(s => ({
       rollNo: s.rollNo,
@@ -232,23 +221,21 @@ const allocateSubjects = async (req, res) => {
       registeredAt: s.createdAt,
       allocated: s.allocated || 'Not Allocated',
     }));
-
+    
+    console.log("[ALLOCATION-DEBUG] --- Allocation Process Finished ---");
     res.status(200).json({
       message: `Allocation complete. ${bulkStudentUpdates.length} students were successfully allocated.`,
       allocation: result,
     });
 
   } catch (error) {
-    // If any error occurs during the process, we log it and send a server error.
     console.error("CRITICAL ALLOCATION ERROR:", error);
     res.status(500).json({ error: "An unexpected error occurred during allocation.", details: error.message });
   } finally {
-    // --- Step 6: Release the Lock ---
-    // This is inside a `finally` block, so it will ALWAYS run, even if an error
-    // occurred. This is crucial to ensure the allocation can be run again in the future.
     isAllocationRunning = false;
   }
 };
+
 
 
 const resetSystem = async (req, res) => {
