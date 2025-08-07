@@ -95,8 +95,8 @@ const AdminPanel = () => {
 
     console.log("✅ Allocation response:", res.data);
 
-    if (res.data && res.data.allocation) {
-      setAllocations(res.data.allocation);
+    if (res.data && res.data.students) {
+      setAllocations(res.data.students);
       setUploadMessage("✅ Allocation completed successfully.");
     } else {
       setUploadMessage("⚠️ No allocation data received.");
