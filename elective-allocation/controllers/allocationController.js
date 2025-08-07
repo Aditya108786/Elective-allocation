@@ -129,23 +129,34 @@ const submitPreferencesBulk = async (req, res) => {
 const allocateSubjects = async (req, res) => {
   try {
     const students = await Student.find({ allocated: null }).sort({ cgpa: -1, createdAt: 1 });
+    const subjects = await Subject.find();
+
+    const subjectMap = new Map();
+    subjects.forEach(subject => {
+      subjectMap.set(subject.name, subject);
+    });
 
     for (let student of students) {
       for (let pref of student.preferences) {
-        // Try atomic update of seatsFilled
-        const subject = await Subject.findOneAndUpdate(
-          { name: pref, $expr: { $lt: ["$seatsFilled", "$seatlimit"] } },
-          { $inc: { seatsFilled: 1 } },
-          { new: true }
-        );
-
-        if (subject) {
+        const subject = subjectMap.get(pref);
+        if (subject && subject.seatsFilled < subject.seatlimit) {
+          subject.seatsFilled += 1;
           student.allocated = pref;
-          await student.save();
-          break; // Move to next student after allocation
+          break;
         }
       }
     }
+
+    // Save updates
+    const updates = [];
+    for (let subject of subjectMap.values()) {
+      updates.push(subject.save());
+    }
+    for (let student of students) {
+      updates.push(student.save());
+    }
+
+    await Promise.all(updates);
 
     const updatedStudents = await Student.find().sort({ cgpa: -1 });
 
@@ -158,10 +169,12 @@ const allocateSubjects = async (req, res) => {
     }));
 
     res.status(200).json({ allocation: result });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 const resetSystem = async (req, res) => {
   try {
