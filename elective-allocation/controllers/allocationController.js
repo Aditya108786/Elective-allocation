@@ -479,6 +479,15 @@ const deletesubject = async(req,res)=>{
    }
 }
 
+const deleteall = async(req, res)=>{
+     try {
+      const result = await Student.deleteMany({})
+      res.status(200).json({message:'All student deleted', deletedCount:result.deletedCount})
+     } catch (error) {
+       res.status(500).json({error:'Faild to delete students'})
+     }
+}
+
 
 
 module.exports = {
@@ -499,5 +508,6 @@ getAllsubjects,
 getMaxPreference,
 alreadyFilled,
 adminpreference,
-deletesubject
+deletesubject,
+deleteall
 };

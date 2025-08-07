@@ -168,6 +168,19 @@ const AdminPanel = () => {
   }
 };
 
+const deleteAll = async()=>{
+
+   try {
+      const res = await axios.delete(`${import.meta.env.VITE_API_BASE}/api/deleteall`, {withCredentials:true})
+      setUploadMessage("All students deleted")
+      setStudents([])
+   } catch (error) {
+     setUploadMessage("Failed to delete students")
+   }
+    
+    
+}
+
 const configuration = ()=>{
    setOpen(!open)
 }
@@ -288,6 +301,8 @@ const configuration = ()=>{
       show all students
     </button>
 
+     
+
     <button
       onClick={startvoice}
       className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-md transition"
@@ -378,6 +393,14 @@ const configuration = ()=>{
     {/* Tables */}
     <SectionTable title="📋 Allocation Results" data={allocations} columns={['Roll No', 'Name', 'CGPA', 'Allocated']} keys={['rollNo', 'name', 'cgpa', 'allocated']} />
 
+
+<button
+      onClick={deleteAll}
+      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-md transition"
+    >
+      Delete All
+    </button>
+    
     <SectionTable
       title="👥 Registered Students"
       data={students}
