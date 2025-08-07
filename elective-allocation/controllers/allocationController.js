@@ -126,85 +126,40 @@ const submitPreferencesBulk = async (req, res) => {
   }
 };
 
-// --- In-memory Lock ---
-// This flag ensures the "allocate at once" process can't be started if it's already running.
-// Place this outside your route handler, at the module level.
-let isAllocationRunning = false;
-
 const allocateSubjects = async (req, res) => {
-  // Check if an allocation process is already running to prevent duplicates.
-  if (isAllocationRunning) {
-    return res.status(409).json({
-      message: "An allocation process is already running. Please wait for it to complete.",
-    });
-  }
-
-  // Set the lock to signal that the process has started.
-  isAllocationRunning = true;
-
   try {
-    // 1. Get all students who are waiting for allocation.
-    const studentsToAllocate = await Student.find({ allocated: null }).sort({ cgpa: -1, createdAt: 1 });
+    const students = await Student.find({ allocated: null }).sort({ cgpa: -1, createdAt: 1 });
 
-    if (studentsToAllocate.length === 0) {
-        return res.status(200).json({ message: "No new students to allocate.", allocation: [] });
-    }
-
-    const bulkUpdateOps = [];
-
-    // 2. Process students in order of priority (highest CGPA first).
-    for (const student of studentsToAllocate) {
-      // Iterate through the student's preferences.
-      for (const preference of student.preferences) {
-        // Atomically find a subject with an available seat and increment its count.
+    for (let student of students) {
+      for (let pref of student.preferences) {
+        // Try atomic update of seatsFilled
         const subject = await Subject.findOneAndUpdate(
-          {
-            name: preference,
-            $expr: { $lt: ["$seatsFilled", "$seatlimit"] },
-          },
-          { $inc: { seatsFilled: 1 } }
+          { name: pref, $expr: { $lt: ["$seatsFilled", "$seatlimit"] } },
+          { $inc: { seatsFilled: 1 } },
+          { new: true }
         );
 
-        // If a subject was successfully found and updated, a seat is reserved.
         if (subject) {
-          // Prepare the update for this student. Don't send it to the DB yet.
-          bulkUpdateOps.push({
-            updateOne: {
-              filter: { _id: student._id },
-              update: { $set: { allocated: preference } },
-            },
-          });
-          // Break from the preferences loop and move to the next student.
-          break; 
+          student.allocated = pref;
+          await student.save();
+          break; // Move to next student after allocation
         }
       }
     }
 
-    // 3. Execute all student updates in a single, efficient database command.
-    if (bulkUpdateOps.length > 0) {
-      await Student.bulkWrite(bulkUpdateOps);
-    }
+    const updatedStudents = await Student.find().sort({ cgpa: -1 });
 
-    // 4. Fetch the final, complete list of students to show the results.
-    const finalStudentList = await Student.find().sort({ cgpa: -1 });
-    const result = finalStudentList.map(s => ({
+    const result = updatedStudents.map(s => ({
       rollNo: s.rollNo,
       name: s.name,
       cgpa: s.cgpa,
+      registeredAt: s.createdAt,
       allocated: s.allocated || 'Not Allocated',
     }));
 
-    res.status(200).json({
-      message: `Allocation complete. ${bulkUpdateOps.length} students were allocated.`,
-      allocation: result,
-    });
-
+    res.status(200).json({ allocation: result });
   } catch (error) {
-    console.error("Allocation Error:", error);
-    res.status(500).json({ error: "An unexpected error occurred during allocation.", details: error.message });
-  } finally {
-    // 5. IMPORTANT: Release the lock so the process can be run again in the future.
-    isAllocationRunning = false;
+    res.status(500).json({ error: error.message });
   }
 };
 
