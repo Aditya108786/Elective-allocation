@@ -297,6 +297,7 @@ const getStudentByRollNo = async (req, res) => {
 
     const student = await Student.findOne({ rollNo });
     if (!student) {
+      console.log("not found")
       return res.status(404).json({ error: 'Student not found' });
     }
 
