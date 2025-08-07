@@ -143,20 +143,17 @@ const submitPreferencesBulk = async (req, res) => {
 // --- In-memory Lock ---
 // This flag prevents the entire allocation process from running more than once at the same time.
 // It should be defined at the module level (outside the function).
-const allocateSubjects = async () => {
+const allocateSubjects = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    // Reset all allocations
     await Student.updateMany({}, { allocated: null }, { session });
 
-    // Fetch all students sorted by CGPA (descending)
     const students = await Student.find({ preferences: { $ne: [] } })
       .sort({ cgpa: -1 })
       .session(session);
 
-    // Load subject seat limits
     const subjects = await Subject.find().session(session);
     const seatMap = {};
     subjects.forEach((subj) => {
@@ -184,18 +181,21 @@ const allocateSubjects = async () => {
             { session }
           );
 
-          break; // move to next student
+          break;
         }
       }
     }
 
     await session.commitTransaction();
     session.endSession();
+
     console.log("✅ Allocation complete");
+    return res.status(200).json({ message: "Allocation complete" }); // ✅ Send response
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
     console.error("❌ Allocation failed:", error);
+    return res.status(500).json({ error: "Allocation failed" }); // ✅ Send error response
   }
 };
 
