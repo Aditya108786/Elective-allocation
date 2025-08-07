@@ -164,27 +164,29 @@ const allocateSubjects = async (req, res) => {
     });
 
     for (const student of students) {
-      for (const pref of student.preferences) {
-        const subjName = pref.trim().toLowerCase();
-        if (
-          seatMap.hasOwnProperty(subjName) &&
-          seatMap[subjName].seatsFilled < seatMap[subjName].seatLimit
-        ) {
-          student.allocated = subjName;
-          seatMap[subjName].seatsFilled += 1;
+  for (const pref of student.preferences) {
+    const subjName = pref.trim().toLowerCase();
+    if (
+      seatMap.hasOwnProperty(subjName) &&
+      seatMap[subjName].seatsFilled < seatMap[subjName].seatLimit
+    ) {
+      student.set('allocated', subjName); // ✅ Mark change
+      seatMap[subjName].seatsFilled += 1;
 
-          await student.save({ session });
+      await student.save({ session }); // ✅ Save with session
 
-          await Subject.updateOne(
-            { name: new RegExp(`^${subjName}$`, 'i') },
-            { $inc: { seatsFilled: 1 } },
-            { session }
-          );
+      await Subject.updateOne(
+        { name: new RegExp(`^${subjName}$`, 'i') },
+        { $inc: { seatsFilled: 1 } },
+        { session }
+      );
 
-          break;
-        }
-      }
+      console.log(`✅ Allocated ${student.name} to ${subjName}`);
+      break;
     }
+  }
+}
+
 
     await session.commitTransaction();
     session.endSession();
