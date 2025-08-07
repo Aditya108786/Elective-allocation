@@ -129,39 +129,46 @@ const submitPreferencesBulk = async (req, res) => {
 const allocateSubjects = async (req, res) => {
   try {
     const seatMap = {};
-    const subjects = await Subject.find({})
-    const students = await Student.find({allocated:null}).sort({ cgpa: -1, createdAt: 1 });
+    
+    // Fetch all subjects
+    const subjects = await Subject.find({});
+    
+    // Create map of subjects with current seat info
+    subjects.forEach((subject) => {
+      seatMap[subject.name.toLowerCase()] = {
+        _id: subject._id,
+        seatlimit: subject.seatlimit,
+        seatsFilled: subject.seatsFilled || 0
+      };
+    });
 
-    subjects.forEach((subject)=>{
-       seatMap[subject.name] = {
-         _id:subject._id,
-         seatlimit:subject.seatlimit,
-         seatsfilled:subject.seatsFilled || 0
-       }
-    })
-
-
+    // Fetch students not yet allocated, sorted by CGPA descending and createdAt ascending
+    const students = await Student.find({ allocated: null }).sort({ cgpa: -1, createdAt: 1 });
 
     for (let student of students) {
       for (let pref of student.preferences) {
-        let subject = seatMap[pref]
+        const subjectName = pref.toLowerCase(); // normalize case
+        const subject = seatMap[subjectName];
 
-        if(subject && subject.seatlimit > subject.seatsFilled){
-          student.allocated = pref
-          subject.seatsFilled += 1
-
-          await student.save()
-          break
+        if (subject && subject.seatlimit > subject.seatsFilled) {
+          // Allocate subject to student
+          student.allocated = pref;
+          subject.seatsFilled += 1;
+          await student.save();
+          break;
         }
       }
     }
 
-    for(const subjname in seatMap){
-         await Subject.findByIdAndUpdate(seatMap[subjname]._id , {
-            seatsFilled:seatMap[subjname].seatsFilled
-         })
+    // Now update the seatsFilled count in DB
+    for (const subjName in seatMap) {
+      const subjData = seatMap[subjName];
+      await Subject.findByIdAndUpdate(subjData._id, {
+        seatsFilled: subjData.seatsFilled
+      });
     }
 
+    // Prepare allocation result
     const result = students.map(s => ({
       rollNo: s.rollNo,
       name: s.name,
@@ -172,6 +179,7 @@ const allocateSubjects = async (req, res) => {
 
     res.status(200).json({ allocation: result });
   } catch (error) {
+    console.error("Error in allocation:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -295,19 +303,29 @@ const logoutAdmin = (req, res) => {
 
 const Addsubjects = async(req, res) =>{
      const{name, seatlimit} = req.body
+     const Normalizename = name.trim().toLowerCase()
 
-     if(!name || !seatlimit){
+     const existingSub = await Subject.findOne({name:Normalizename})
+     if(existingSub){
+        return res.status(409).json({message:'Subject already exists'})
+     }
+
+     if(!Normalizename || !seatlimit){
       return res.status(404).json({error:"name and limit required"})
        
      }
 
-     const subjectdetail = new subjects({
-        name,
+     const subjectdetail = new Subject({
+        name:Normalizename,
         seatlimit
      })
      await subjectdetail.save()
      return res.status(200).json({message:"subjects uploaded"})
 }
+
+
+
+
 
 const maxPreference = async (req, res) => {
   try {
@@ -510,4 +528,5 @@ alreadyFilled,
 adminpreference,
 deletesubject,
 deleteall
+
 };

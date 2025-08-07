@@ -91,6 +91,7 @@ const AdminPanel = () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_BASE}/api/allocate`, { withCredentials: true });
       setAllocations(res.data.allocation || []);
+      setUploadMessage("Allocated")
     } catch {
       setUploadMessage("❌ Allocation failed.");
     }
@@ -400,7 +401,7 @@ const configuration = ()=>{
     >
       Delete All
     </button>
-    
+
     <SectionTable
       title="👥 Registered Students"
       data={students}
