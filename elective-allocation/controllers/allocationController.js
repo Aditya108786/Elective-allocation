@@ -148,7 +148,9 @@ const allocateSubjects = async (req, res) => {
   session.startTransaction();
 
   try {
+    // Reset previous allocations and seat counts
     await Student.updateMany({}, { allocated: null }, { session });
+    await Subject.updateMany({}, { seatsFilled: 0 }, { session });
 
     const students = await Student.find({ preferences: { $ne: [] } })
       .sort({ cgpa: -1 })
@@ -159,49 +161,48 @@ const allocateSubjects = async (req, res) => {
     subjects.forEach((subj) => {
       seatMap[subj.name.toLowerCase()] = {
         seatLimit: subj.seatLimit,
-        seatsFilled: subj.seatsFilled,
+        seatsFilled: 0, // reset
       };
     });
 
     for (const student of students) {
-  for (const pref of student.preferences) {
-    const subjName = pref.trim().toLowerCase();
-    if (
-      seatMap.hasOwnProperty(subjName) &&
-      seatMap[subjName].seatsFilled < seatMap[subjName].seatLimit
-    ) {
-      student.set('allocated', subjName); // ✅ Mark change
-      seatMap[subjName].seatsFilled += 1;
+      for (const pref of student.preferences) {
+        const subjName = pref.trim().toLowerCase();
+        if (
+          seatMap.hasOwnProperty(subjName) &&
+          seatMap[subjName].seatsFilled < seatMap[subjName].seatLimit
+        ) {
+          student.allocated = subjName;
+          seatMap[subjName].seatsFilled += 1;
 
-      await student.save({ session }); // ✅ Save with session
+          await student.save({ session });
 
-      await Subject.updateOne(
-        { name: new RegExp(`^${subjName}$`, 'i') },
-        { $inc: { seatsFilled: 1 } },
-        { session }
-      );
+          await Subject.updateOne(
+            { name: { $regex: `^${subjName}$`, $options: 'i' } },
+            { $inc: { seatsFilled: 1 } },
+            { session }
+          );
 
-      console.log(`✅ Allocated ${student.name} to ${subjName}`);
-      break;
+          console.log(`✅ Allocated ${student.name} to ${subjName}`);
+          break;
+        }
+      }
     }
-  }
-}
 
-
+    const updatedStudents = await Student.find().session(session); // inside session
     await session.commitTransaction();
     session.endSession();
 
     console.log("✅ Allocation complete");
-    const updatedStudents = await Student.find().session(session);
     return res.status(200).json({
-  message: "Allocation complete",
-  students: updatedStudents,
-}); // ✅ Send response
+      message: "Allocation complete",
+      students: updatedStudents,
+    });
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
     console.error("❌ Allocation failed:", error);
-    return res.status(500).json({ error: "Allocation failed" }); // ✅ Send error response
+    return res.status(500).json({ error: "Allocation failed" });
   }
 };
 
